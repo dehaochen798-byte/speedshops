@@ -1,0 +1,15 @@
+{
+  "hash": "ed62b14d",
+  "configHash": "fbc6280e",
+  "lockfileHash": "915e01d4",
+  "browserHash": "6686f0ac",
+  "optimized": {
+    "jose": {
+      "src": "../../../../../node_modules/jose/dist/webapi/index.js",
+      "file": "jose.js",
+      "fileHash": "441cd10e",
+      "needsInterop": false
+    }
+  },
+  "chunks": {}
+}
