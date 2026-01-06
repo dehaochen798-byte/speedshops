@@ -68,7 +68,8 @@ export default {
 
       // 3. 判断userState，决定是否添加“商品添加”项
       // - userState为0（管理员）显示，其他不显示
-      if (userState === "0") {
+      //   userState === "0" 这个等后端有数据以后记得更改
+      if (true) {
         // 在“个人信息”和“退出登录”之间插入“商品添加”
         baseItemList.splice(1, 0, {
           id: 2,
@@ -91,7 +92,7 @@ export default {
           break;
         case 2:
           uni.navigateTo({
-            url: "/pages/my/accountInfo",
+            url: "/pages/my/goodInfo",
           });
           break;
         case 5:

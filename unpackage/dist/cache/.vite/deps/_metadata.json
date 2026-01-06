@@ -1,13 +1,13 @@
 {
-  "hash": "ed62b14d",
+  "hash": "659d2ae8",
   "configHash": "fbc6280e",
-  "lockfileHash": "915e01d4",
-  "browserHash": "6686f0ac",
+  "lockfileHash": "f74b6b43",
+  "browserHash": "15b4bb0d",
   "optimized": {
     "jose": {
       "src": "../../../../../node_modules/jose/dist/webapi/index.js",
       "file": "jose.js",
-      "fileHash": "441cd10e",
+      "fileHash": "51d0f26e",
       "needsInterop": false
     }
   },
