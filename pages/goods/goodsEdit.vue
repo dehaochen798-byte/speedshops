@@ -1,7 +1,7 @@
 <template>
   <view class="good-info-page">
     <!-- 页面标题 -->
-    <view class="page-header">添加商品</view>
+    <view class="page-header">修改商品</view>
 
     <!-- 商品添加表单 -->
     <view class="goods-form">
@@ -51,43 +51,21 @@
 
         <!-- 横向滚动容器：窗口缩小时底部出现滚动条 -->
         <view class="table-scroll-container">
-          <uni-table border stripe :min-width="800">
-            <!-- 调整最小宽度，适配新增列 -->
+          <uni-table border stripe :min-width="600">
             <!-- 设置表格最小宽度，触发滚动 -->
             <uni-tr>
-              <uni-th style="width: 180rpx">规格值</uni-th>
-              <!-- 新增：规格图片表头，固定宽度 -->
-              <uni-th style="width: 200rpx">规格图片</uni-th>
-              <uni-th style="width: 120rpx">原价</uni-th>
-              <uni-th style="width: 120rpx">特价</uni-th>
+              <uni-th>规格值</uni-th>
+              <uni-th>原价</uni-th>
+              <uni-th>特价</uni-th>
               <uni-th style="width: 120rpx">操作</uni-th>
               <!-- 固定操作列宽度 -->
             </uni-tr>
             <uni-tr v-for="(row, index) in goodsForm.specList" :key="index">
-              <!-- 规格值输入框（保留） -->
               <uni-td>
                 <uni-easyinput
-                  v-model="row.attributeValue"
+                  v-model="row.attributeValue1"
                   placeholder="如：香辣、128G"
                   @blur="() => validateSpecRow(row)"
-                />
-              </uni-td>
-              <!-- 修复：规格图片上传组件，优化样式和属性 -->
-              <uni-td class="spec-img-cell">
-                <!-- 新增专属类名，优化样式 -->
-                <uni-file-picker
-                  file-mediatype="image"
-                  mode="grid"
-                  :limit="1"
-                  :auto-upload="false"
-                  @select="(e) => handleSpecImageSelect(e, index)"
-                  @delete="() => handleSpecImageDelete(index)"
-                  style="
-                    width: 160rpx;
-                    height: 160rpx;
-                    display: block;
-                    pointer-events: auto !important;
-                  "
                 />
               </uni-td>
               <uni-td>
@@ -143,18 +121,26 @@ export default {
     return {
       goodsForm: {
         gname: "",
-        icon: "", // 商品主图
+        icon: "",
         attributeName1: "",
         specList: [
           {
-            attributeValue: "", // 规格值（如：香辣、128G）
-            gdpic: "", // 新增：规格图片路径
-            originalPrice: "", // 原价
-            specialPrice: "", // 特价
+            attributeValue1: "",
+            originalPrice: "",
+            specialPrice: "",
           },
         ],
       },
     };
+  },
+  onload(options) {
+    if (options.gid) {
+      getGoodsDataByGid(options.gid);
+    } else {
+      uni.switchTab({
+        url: "/pages/index/index",
+      });
+    }
   },
   methods: {
     validateGname() {
@@ -179,44 +165,16 @@ export default {
       }
       return true;
     },
-    // 商品主图选择
     handleImageSelect(e: any) {
       const file = e.tempFiles[0];
       this.goodsForm.icon = file.tempFilePath || file.url;
     },
-    // 商品主图删除
     handleImageDelete() {
       this.goodsForm.icon = "";
     },
-    // 新增：规格图片选择事件（接收索引，绑定对应行的gdpic）
-    handleSpecImageSelect(e: any, index: number) {
-      // 修复：确保事件参数正确获取
-      if (!e || !e.tempFiles || e.tempFiles.length === 0) {
-        uni.showToast({ title: "未选择图片", icon: "none" });
-        return;
-      }
-      const file = e.tempFiles[0];
-      this.goodsForm.specList[index].gdpic = file.tempFilePath || file.url;
-    },
-    // 新增：规格图片删除事件（接收索引，清空对应行的gdpic）
-    handleSpecImageDelete(index: number) {
-      this.goodsForm.specList[index].gdpic = "";
-      // 修复：主动清空组件的选中状态（可选，增强体验）
-      const pickerEls = uni
-        .createSelectorQuery()
-        .selectAll(`.spec-img-cell uni-file-picker`);
-      pickerEls
-        .fields({ node: true, size: true }, (res) => {
-          if (res[index] && res[index].node) {
-            (res[index].node as any).clearFiles();
-          }
-        })
-        .exec();
-    },
     addSpecRow() {
       this.goodsForm.specList.push({
-        attributeValue: "",
-        gdpic: "", // 新增：初始化规格图片字段
+        attributeValue1: "",
         originalPrice: "",
         specialPrice: "",
       });
@@ -246,17 +204,10 @@ export default {
       });
     },
     validateSpecRow(row: any) {
-      // 1. 校验规格值
-      if (!row.attributeValue) {
+      if (!row.attributeValue1) {
         uni.showToast({ title: "请填写规格值", icon: "none" });
         return false;
       }
-      // 新增：2. 校验规格图片
-      if (!row.gdpic) {
-        uni.showToast({ title: "请上传规格图片", icon: "none" });
-        return false;
-      }
-      // 3. 校验原价
       if (
         !row.originalPrice ||
         isNaN(Number(row.originalPrice)) ||
@@ -265,7 +216,6 @@ export default {
         uni.showToast({ title: "请填写有效的原价（大于0）", icon: "none" });
         return false;
       }
-      // 4. 校验特价
       if (
         !row.specialPrice ||
         isNaN(Number(row.specialPrice)) ||
@@ -274,7 +224,6 @@ export default {
         uni.showToast({ title: "请填写有效的特价（大于0）", icon: "none" });
         return false;
       }
-      // 5. 校验特价不大于原价
       if (Number(row.specialPrice) > Number(row.originalPrice)) {
         uni.showToast({ title: "特价不能大于原价", icon: "none" });
         return false;
@@ -282,7 +231,6 @@ export default {
       return true;
     },
     submitGoodsForm() {
-      // 1. 先执行原有校验（确保表单输入合法）
       if (!this.validateGname() || !this.validateAttrName()) return;
       if (!this.goodsForm.icon) {
         uni.showToast({ title: "请上传商品图片", icon: "none" });
@@ -294,141 +242,76 @@ export default {
       });
       if (!specValid) return;
 
-      uni.showToast({ title: "上传图片中...", icon: "loading", duration: 0 });
+      uni.showToast({ title: "提交中...", icon: "loading", duration: 0 });
 
-      // 2. 收集所有需要上传的图片（主图 + 所有规格图）
-      const filesToUpload = [
-        // 主图：name 与后端约定（如 mainPic），path 是主图 blob 路径
-        { type: "main", name: "mainPic", path: this.goodsForm.icon },
-        // 规格图：循环收集每个规格的 gdpic，name 按索引区分（如 specPic0、specPic1）
-        ...this.goodsForm.specList.map((row, index) => ({
-          type: "spec",
-          index,
-          name: `specPic${index}`,
-          path: row.gdpic,
-        })),
-      ];
+      const formData = {
+        gname: this.goodsForm.gname,
+        attributeName1: this.goodsForm.attributeName1,
+        // 复杂数组转JSON字符串，后端接收后用JSON.parse解析
+        specList: JSON.stringify(
+          this.goodsForm.specList.map((row) => ({
+            attributeValue1: row.attributeValue1,
+            originalPrice: Number(row.originalPrice),
+            specialPrice: Number(row.specialPrice),
+          }))
+        ),
+      };
 
-      // 3. 批量上传所有图片，获取服务器返回的真实 URL
-      this.uploadAllImages(filesToUpload)
-        .then((imageUrls) => {
-          // 4. 图片上传成功后，整理最终表单数据（用真实 URL 替换 blob 路径）
-          const finalFormData = {
-            gname: this.goodsForm.gname,
-            attributeName1: this.goodsForm.attributeName1,
-            // 主图真实 URL
-            mainPicUrl: imageUrls.main,
-            // 规格列表：替换 gdpic 为真实 URL，价格转数字
-            specList: JSON.stringify(
-              this.goodsForm.specList.map((row, index) => ({
-                attributeValue: row.attributeValue,
-                gdpic: imageUrls.specs[index], // 规格图真实 URL
-                originalPrice: Number(row.originalPrice),
-                specialPrice: Number(row.specialPrice),
-              }))
-            ),
-          };
-
-          // 5. 提交最终表单数据（此时所有图片都是服务器可访问的 URL）
-          this.submitFinalForm(finalFormData);
-        })
-        .catch((err) => {
-          uni.hideToast();
-          uni.showToast({ title: `图片上传失败：${err}`, icon: "none" });
-          console.error("图片上传失败：", err);
-        });
-    },
-
-    // 辅助方法 1：批量上传所有图片，返回 Promise（主图 URL + 规格图 URL 数组）
-    uploadAllImages(files: any[]): Promise<{ main: string; specs: string[] }> {
-      return new Promise((resolve, reject) => {
-        const total = files.length;
-        let uploadedCount = 0;
-        const result: { main: string; specs: string[] } = {
-          main: "",
-          specs: [],
-        };
-
-        // 循环上传每个文件
-        files.forEach((file) => {
-          uni.uploadFile({
-            // 后端图片上传接口（单独的图片上传接口，返回文件 URL）
-            url: "https://你的服务器域名/api/upload/image",
-            filePath: file.path, // 图片临时路径（blob 或本地路径）
-            name: file.name, // 后端接收文件的参数名（如 mainPic、specPic0）
-            // 可选：传递图片类型（主图/规格图），方便后端分类存储
-            formData: { type: file.type },
-            success: (res) => {
-              uploadedCount++;
-              const resData = JSON.parse(res.data);
-              // 假设后端返回格式：{ code: 0, data: { url: "服务器图片URL" } }
-              if (resData.code !== 0) {
-                reject(`图片${file.name}上传失败`);
-                return;
-              }
-
-              // 按类型存储 URL
-              if (file.type === "main") {
-                result.main = resData.data.url;
-              } else if (file.type === "spec") {
-                result.specs[file.index] = resData.data.url; // 按索引对应规格行
-              }
-
-              // 所有图片上传完成，resolve 结果
-              if (uploadedCount === total) {
-                resolve(result);
-              }
-            },
-            fail: (err) => {
-              reject(`图片${file.name}上传失败：${err.errMsg}`);
-            },
-          });
-        });
-      });
-    },
-
-    // 辅助方法 2：提交最终表单数据（所有图片已替换为服务器 URL）
-    submitFinalForm(formData: any) {
-      uni.showToast({ title: "提交商品中...", icon: "loading", duration: 0 });
-      console.log(formData);
-      // 用 uni.request 提交表单（此时无二进制文件，纯 JSON 数据）
-      uni.request({
-        url: "https://你的服务器域名/api/goods/add",
-        method: "POST",
-        data: formData,
-        header: {
-          "Content-Type": "application/json", // 纯 JSON 提交
-        },
-        success: (res: any) => {
-          uni.hideToast();
-          if (res.data.code === 0) {
+      uni.uploadFile({
+        // 你的后端接收表单+图片的接口地址（和后端约定好）
+        url: "https://你的服务器域名/api/goods/updata",
+        // 图片的临时路径（uni-app自动处理H5/小程序/APP的路径兼容）
+        filePath: this.goodsForm.icon,
+        // 后端接收图片文件的参数名（必须和后端约定，比如叫file/image）
+        name: "file",
+        // 普通表单字段放在formData里
+        formData: formData,
+        // 成功回调
+        success: (res) => {
+          uni.hideToast(); // 关闭加载
+          // 解析后端返回的结果（根据后端格式调整）
+          if (!res.data) {
+            uni.showToast({ title: "提交失败，没有数据", icon: "none" });
+            return;
+          }
+          const resData = JSON.parse(res.data);
+          if (resData.code === 0) {
             uni.showToast({ title: "商品添加成功", icon: "success" });
-            this.resetForm();
+            this.resetForm(); // 重置表单
           } else {
-            uni.showToast({ title: res.data.msg || "提交失败", icon: "none" });
+            uni.showToast({ title: resData.msg || "提交失败", icon: "none" });
           }
         },
+        // 失败回调
         fail: (err) => {
           uni.hideToast();
           uni.showToast({ title: "网络错误，提交失败", icon: "none" });
           console.error("表单提交失败：", err);
         },
       });
-
-      console.log("最终提交数据（含服务器图片URL）：", formData);
+      console.log("提交数据：", formData);
     },
     resetForm() {
       this.goodsForm.gname = "";
       this.goodsForm.icon = "";
       this.goodsForm.attributeName1 = "";
-      // 重置规格列表（包含gdpic）
       this.goodsForm.specList = [
-        { attributeValue: "", gdpic: "", originalPrice: "", specialPrice: "" },
+        { attributeValue1: "", originalPrice: "", specialPrice: "" },
       ];
-      // 清空主图上传组件
       if (this.$refs.filePickerRef) {
         (this.$refs.filePickerRef as any).clearFiles();
       }
+    },
+    getGoodsDataByGid(gid: string) {
+      uni.request({
+        url: app.globalData.baseUrl + "goods/getcurgoodsinfo/" + gid,
+        success: (res) => {
+          if (res.data.statusCode == 200) {
+            this.curgoods = res.data.mydata;
+          }
+          //console.log(res)
+        },
+      });
     },
   },
 };
@@ -470,6 +353,8 @@ uni-easyinput {
   font-size: 26rpx;
 }
 uni-file-picker {
+  width: 180rpx;
+  height: 180rpx;
   margin: 0 auto;
 }
 .add-row-btn {
@@ -514,7 +399,7 @@ uni-table uni-th {
 
 /* 表格最小宽度：保证内容不挤在一起，触发滚动 */
 uni-table {
-  min-width: 800rpx; /* 调整最小宽度，适配规格图片列 */
+  min-width: 600rpx; /* 根据内容设置最小宽度，可根据需求调整 */
 }
 
 /* 表格内容垂直居中（和操作列按钮对齐） */
@@ -545,32 +430,6 @@ uni-table uni-th {
   background-color: #ff4d4f;
   border-color: #ff4d4f;
   color: #ffffff;
-}
-
-/* 规格图片单元格样式：确保填充整个小方格 */
-.spec-img-cell {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 修改规格图片上传组件内部样式，确保图片填充整个空间 */
-.spec-img-cell :deep(.uni-file-picker__files) {
-  width: 100%;
-  height: 100%;
-}
-
-.spec-img-cell :deep(.uni-file-picker__file) {
-  width: 100%;
-  height: 100%;
-}
-
-.spec-img-cell :deep(.uni-file-picker__img) {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 :deep(.spec-form-item) {
   width: 100%;
