@@ -129,7 +129,7 @@
           @click="submitGoodsForm"
           class="submit-btn"
         >
-          提交商品
+          完成修改
         </uni-button>
       </view>
     </view>
