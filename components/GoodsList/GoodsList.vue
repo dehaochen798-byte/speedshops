@@ -5,13 +5,11 @@
       v-for="(item, index) in goodslist"
       @click="clickgoodsitem(item)"
     >
-      <!-- 新增：右上角齿轮图标 -->
+      <!-- 右上角齿轮图标 -->
       <view class="gear-icon" @click.stop="openGoodsEditForm(item)">
-        <!-- 用uni-icons的齿轮图标，也可以替换为本地图片（如src="/static/gear.png"） -->
         <uni-icons type="gear" size="32rpx" color="#666"></uni-icons>
       </view>
 
-      <!-- 原有内容 -->
       <image :src="item.icon" class="firstimg"></image>
       <view class="gname">{{ item.gname }}</view>
       <view class="discountsparent" v-if="item.discounts != ''">
@@ -40,6 +38,7 @@ export default {
   created() {
     this.loadGoodsList();
   },
+
   methods: {
     // 点击当前商品，转向商品详细页面
     clickgoodsitem(item) {
@@ -84,8 +83,13 @@ export default {
       });
     },
     openGoodsEditForm(item) {
-      // 这里先做测试，后续替换为打开修改表单的逻辑
+      // 1. 保存当前商品信息
+      app.globalData.curGoods = item;
+      // 2. 转向商品编辑页面，传递gid参数
       console.log("点击了齿轮，要修改的商品是：", item);
+      uni.navigateTo({
+        url: "/pages/goods/goodsEdit?gid=" + item.gid,
+      });
     },
   },
 };
